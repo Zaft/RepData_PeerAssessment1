@@ -8,6 +8,10 @@ output:
 
 ## Loading and preprocessing the data
 
+1. Load the data (i.e. `read.csv()`)
+
+2. Process/transform the data (if necessary) into a format suitable for your analysis
+
 ```{r}
 if(!file.exists("activity.zip"))
   download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", "activity.zip")
@@ -20,6 +24,11 @@ data <- read.csv("activity.csv")
 
 
 ## What is mean total number of steps taken per day?
+
+1. Make a histogram of the total number of steps taken each day
+
+2. Calculate and report the **mean** and **median** total number of steps taken per day
+
 ```{r} 
 stepsByDay <- aggregate(data["steps"], by=data["date"], sum)
 
@@ -38,11 +47,28 @@ The mean total number of steps taken each day is `r meanSteps`, and the median n
 
 
 ## What is the average daily activity pattern?
+```{r}
+library(magrittr)
+library(dplyr)
+## Get the avg numbers of steps taken for each 5 min interval
 
+stepsByIntveral <- data %>% group_by(interval) %>% summarize(avgSteps = mean(steps, na.rm = TRUE))
+
+## plot the time series of the avg number of steps taken per 5 min interval
+plot(stepsByIntveral$interval, stepsByIntveral$avgSteps,
+     xlab = "5 minute Interval",
+     ylab = "Avg number of steps",
+     main = "Time Series - Avg number of steps for each 5 min interval",
+     col = 4)
+
+```
+
+1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
 
 ## Imputing missing values
-
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
