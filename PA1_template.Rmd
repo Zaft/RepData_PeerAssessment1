@@ -1,8 +1,9 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
+title: 'Reproducible Research: Peer Assessment 1'
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
+  pdf_document: default
 ---
 
 
@@ -39,20 +40,28 @@ medianSteps <- median(stepsByDay$steps, na.rm=TRUE)
 hist(stepsByDay$steps,
      xlab = "Total number of steps taken each day",
      ylab = "Count",
-     main = "Histogram - total number of steps taken each",
+     main = "Histogram - Number of steps taken each day",
      col = 4)
 ```
 
-The mean total number of steps taken each day is `r meanSteps`, and the median number of steps taken each day is `r medianSteps`.
+The mean total number of steps taken each day is `r meanSteps` and the median number of steps taken each day is `r medianSteps`.
 
 
 ## What is the average daily activity pattern?
-```{r}
+
+``` {r include=FALSE}
 library(magrittr)
 library(dplyr)
+```
+```{r}
 ## Get the avg numbers of steps taken for each 5 min interval
 
+## One way to accomplish this is to use dplyr and group_by followed by summarize
 stepsByIntveral <- data %>% group_by(interval) %>% summarize(avgSteps = mean(steps, na.rm = TRUE))
+
+## Another way to accomplish this is to use the R Base function aggregate
+stepsByInterval1 <- aggregate(x=list(steps = data$steps), by=list(interval = data$interval), FUN = mean, na.rm=TRUE)
+
 
 ## plot the time series of the avg number of steps taken per 5 min interval
 plot(stepsByIntveral$interval, stepsByIntveral$avgSteps,
@@ -61,14 +70,79 @@ plot(stepsByIntveral$interval, stepsByIntveral$avgSteps,
      main = "Time Series - Avg number of steps for each 5 min interval",
      col = 4)
 
+maxInterval <- stepsByIntveral[which.max(stepsByIntveral$avgSteps),]
 ```
 
 1. Make a time series plot (i.e. `type = "l"`) of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
+The following interval contains, on average across all days, the maximum numbers of steps `r maxInterval`.
+
 
 ## Imputing missing values
 
+Note that there are a number of days/intervals where there are missing
+values (coded as `NA`). The presence of missing days may introduce
+bias into some calculations or summaries of the data.
+
+```{r}
+numNas <- sum(is.na(data$steps))
+
+```
+The number of rows with missing values in the data set is `r numNas`.
+
+``` {r}
+
+## Strategy for imputing missing values 
+## Use the mean for the 5 minute interval if the value is missing
+
+fillValue <- function(steps, interval){
+    filled <- NA
+    if (!is.na(steps))
+        filled <- c(steps)
+    else
+        filled <- (stepsByInterval1[stepsByInterval1$interval==interval, "steps"])
+    return(filled)
+}
+
+filledData <- data
+filledData$steps <- mapply(fillValue, filledData$steps, filledData$interval)
+
+totalStepsByDay <- tapply(filledData$steps, filledData$date, FUN=sum)
+
+hist(totalStepsByDay,
+     xlab = "Total number of steps taken each day",
+     ylab = "Count",
+     main = "Histogram - Number of steps taken each day",
+     col = 4)
+
+meanSteps <- format(mean(totalStepsByDay, scientific = FALSE))
+
+medianSteps <- format(median(totalStepsByDay, scientific = FALSE))
+
+```
+
+When imputing the missing values, the mean of steps taken each dayis `r meanSteps` and the median number of steps taken is `r medianSteps`. The mean value is slightly higher when imputing values because the total number of steps each day increases when NA values are replaced.
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r}
+#we can use R's weekdays() function to determine if a given date is weekday or weekend
+#The weekday() method takes a date and returns a string value for the day of the week.
+
+weekDayOrWeekend <- function(date) {
+  day <- weekdays(date)
+  if (day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday"))
+    return("weekday")
+  else if (day %in% c("Saturday", "Sunday"))
+    return("weekend")
+  else
+    stop("invalid date")
+}
+
+# Convert date column to date value
+filledData <- as.Date(filledData$date)
+
+filledData$day <- sapply(filledData$date, FUN = weekDayOrWeekend)
+
+```
