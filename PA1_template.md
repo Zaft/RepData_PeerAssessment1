@@ -13,7 +13,8 @@ output:
 
 2. Process/transform the data (if necessary) into a format suitable for your analysis
 
-```{r}
+
+```r
 if(!file.exists("activity.zip"))
   download.file("https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2Factivity.zip", "activity.zip")
 
@@ -30,7 +31,8 @@ data <- read.csv("activity.csv")
 
 2. Calculate and report the **mean** and **median** total number of steps taken per day
 
-```{r} 
+
+```r
 stepsByDay <- aggregate(data["steps"], by=data["date"], sum)
 
 meanSteps <- format(mean(stepsByDay$steps, na.rm="TRUE"), scientific = FALSE)
@@ -44,17 +46,17 @@ hist(stepsByDay$steps,
      col = 4)
 ```
 
-The mean total number of steps taken each day is `r meanSteps` and the median number of steps taken each day is `r medianSteps`.
+![](PA1_template_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+
+The mean total number of steps taken each day is 10766.19 and the median number of steps taken each day is 10765.
 
 
 ## What is the average daily activity pattern?
 
-``` {r include=FALSE}
-library(magrittr)
-library(dplyr)
-```
 
-```{r}
+
+
+```r
 ## Get the avg numbers of steps taken for each 5 min interval
 
 ## One way to accomplish this is to use dplyr and group_by followed by summarize
@@ -70,7 +72,11 @@ plot(stepsByIntveral$interval, stepsByIntveral$avgSteps,
      ylab = "Avg number of steps",
      main = "Time Series - Avg number of steps for each 5 min interval",
      col = 4)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-4-1.png)<!-- -->
+
+```r
 maxInterval <- stepsByIntveral[which.max(stepsByIntveral$avgSteps),]
 ```
 
@@ -78,7 +84,7 @@ maxInterval <- stepsByIntveral[which.max(stepsByIntveral$avgSteps),]
 
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
-The following interval, averaged across all days, contains the maximum number of steps `r maxInterval`.
+The following interval, averaged across all days, contains the maximum number of steps 835, 206.1698113.
 
 
 ## Imputing missing values
@@ -87,14 +93,14 @@ Note that there are a number of days/intervals where there are missing
 values (coded as `NA`). The presence of missing days may introduce
 bias into some calculations or summaries of the data.
 
-```{r}
+
+```r
 numNas <- sum(is.na(data$steps))
-
 ```
-The number of rows with missing values in the dataset is `r numNas`.
+The number of rows with missing values in the dataset is 2304.
 
-``` {r}
 
+```r
 ## Strategy for imputing missing values 
 ## Use the mean for the 5 minute interval if the value is missing
 
@@ -117,21 +123,23 @@ hist(totalStepsByDay,
      ylab = "Count",
      main = "Histogram - Number of steps taken each day",
      col = 4)
+```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
+```r
 meanSteps <- format(mean(totalStepsByDay, scientific = FALSE))
 
 medianSteps <- format(median(totalStepsByDay, scientific = FALSE))
-
 ```
 
-When imputing the missing values, the mean of steps taken each day is `r meanSteps` and the median number of steps taken is `r medianSteps`. The mean value is slightly higher when imputing values because the total number of steps each day increases when NA values are replaced.
+When imputing the missing values, the mean of steps taken each day is 10766.19 and the median number of steps taken is 10766.19. The mean value is slightly higher when imputing values because the total number of steps each day increases when NA values are replaced.
 
 ## Are there differences in activity patterns between weekdays and weekends?
-``` {r include=FALSE}
-library(lattice)
-```
 
-```{r}
+
+
+```r
 #we can use R's weekdays() function to determine if a given date is a weekday or weekend
 #The weekday() method takes a date and returns a string value for the day of the week.
 
@@ -155,5 +163,6 @@ names(meanStepsByInterval) <- c("interval", "weekDays", "avgSteps")
 
 xyplot(meanStepsByInterval$avgSteps ~ meanStepsByInterval$interval | meanStepsByInterval$weekDays,
        layout = c(1,2), type="l", xlab="Interval", ylab="Number of steps")
-
 ```
+
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
